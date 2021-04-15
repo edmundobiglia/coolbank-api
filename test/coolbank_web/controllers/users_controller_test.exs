@@ -35,7 +35,7 @@ defmodule CoolbankWeb.AccountsControllerTest do
       assert %{
                "description" => "Invalid input",
                "details" => %{"email" => "has invalid format"},
-               "type" => "bad_input"
+               "type" => "Bad input"
              } = conn |> post("/api/accounts", input) |> json_response(400)
     end
 
@@ -49,7 +49,7 @@ defmodule CoolbankWeb.AccountsControllerTest do
       assert %{
                "description" => "Invalid input",
                "details" => %{"email_confirmation" => "has invalid format"},
-               "type" => "bad_input"
+               "type" => "Bad input"
              } = conn |> post("/api/accounts", input) |> json_response(400)
     end
 
@@ -65,7 +65,7 @@ defmodule CoolbankWeb.AccountsControllerTest do
                "details" => %{
                  "email_and_email_confirmation" => "Email and email confirmation do not match"
                },
-               "type" => "bad_input"
+               "type" => "Bad input"
              } = conn |> post("/api/accounts", input) |> json_response(400)
     end
 
@@ -79,7 +79,7 @@ defmodule CoolbankWeb.AccountsControllerTest do
       assert %{
                "description" => "Invalid input",
                "details" => %{"name" => "should be at least %{count} character(s)"},
-               "type" => "bad_input"
+               "type" => "Bad input"
              } = conn |> post("/api/accounts", input) |> json_response(400)
     end
 
@@ -109,7 +109,7 @@ defmodule CoolbankWeb.AccountsControllerTest do
       assert %{
                "description" => "Invalid input",
                "details" => %{"name" => "can't be blank"},
-               "type" => "bad_input"
+               "type" => "Bad input"
              } = conn |> post("/api/accounts", input) |> json_response(400)
     end
 
@@ -122,7 +122,7 @@ defmodule CoolbankWeb.AccountsControllerTest do
       assert %{
                "description" => "Invalid input",
                "details" => %{"email" => "can't be blank"},
-               "type" => "bad_input"
+               "type" => "Bad input"
              } = conn |> post("/api/accounts", input) |> json_response(400)
     end
 
@@ -135,7 +135,7 @@ defmodule CoolbankWeb.AccountsControllerTest do
       assert %{
                "description" => "Invalid input",
                "details" => %{"email_confirmation" => "can't be blank"},
-               "type" => "bad_input"
+               "type" => "Bad input"
              } = conn |> post("/api/accounts", input) |> json_response(400)
     end
   end

@@ -9,7 +9,7 @@ defmodule CoolbankWeb.Router do
     pipe_through :api
 
     post "/accounts", AccountsController, :create
-    post "/accounts/withdraw", AccountsController, :withdraw
-    post "/accounts/transfer", AccountsController, :transfer
+    patch "/accounts/withdraw", AccountsController, :withdraw
+    patch "/accounts/transfer", AccountsController, :transfer
   end
 end

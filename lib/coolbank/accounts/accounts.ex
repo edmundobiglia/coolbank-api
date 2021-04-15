@@ -4,7 +4,7 @@ defmodule Coolbank.Accounts do
 
   @doc """
   If params are valid, inserts new account into the database and returns
-  {:ok, account}, otherwise returns {:error, error} or {:error, changeset}
+  {:ok, account}, else returns {:error, error} or {:error, changeset}
   """
   @spec create_new_account(map()) ::
           {:ok, Account.t()} | {:error, Ecto.Changeset.t() | :email_conflict}
@@ -19,5 +19,34 @@ defmodule Coolbank.Accounts do
   rescue
     Ecto.ConstraintError ->
       {:error, :email_conflict}
+  end
+
+  @doc """
+  If the passed account_id exists and the resulting balance is not negative,
+  returns {:ok, account}, else returns {:error, error} or {:error, changeset}
+  """
+  @spec withdraw(map()) ::
+          {:ok, Account.t()}
+          | {:error, :account_not_found | Ecto.Changeset.t() | :balance_cannot_be_negative}
+  def withdraw(%{"account_id" => account_id, "amount" => amount}) do
+    with %Account{} = account <- Repo.get(Account, account_id) do
+      changes = %{balance: account.balance - amount}
+
+      updated_account = Account.update_balance_changeset(account, changes)
+
+      case Repo.update(updated_account) do
+        {:ok, account} -> {:ok, account}
+        {:error, changeset} -> {:error, changeset}
+      end
+    else
+      nil ->
+        {:error, :account_not_found}
+
+      %{valid?: false} = changeset ->
+        {:error, changeset}
+    end
+  rescue
+    Ecto.ConstraintError ->
+      {:error, :balance_cannot_be_negative}
   end
 end

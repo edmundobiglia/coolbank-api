@@ -30,6 +30,12 @@ defmodule Coolbank.Accounts.Schemas.Account do
     |> validate_email_equals_to_email_confirmation(params)
   end
 
+  def update_balance_changeset(account, params) do
+    account
+    |> cast(params, [:balance])
+    |> validate_number(:balance, greater_than_or_equal_to: 0)
+  end
+
   defp validate_email_equals_to_email_confirmation(
          %Ecto.Changeset{valid?: false} = changeset,
          _params
