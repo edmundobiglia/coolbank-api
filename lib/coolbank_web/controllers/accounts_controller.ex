@@ -1,19 +1,19 @@
-defmodule CoolbankWeb.UsersController do
+defmodule CoolbankWeb.AccountsController do
   @moduledoc """
-  Actions related to user
+  Actions related to account
   """
   use CoolbankWeb, :controller
 
-  alias Coolbank.Users
+  alias Coolbank.Accounts
 
   @doc """
-  Create user action
+  Create account action
   """
   def create(conn, params) do
-    with {:ok, user} <- Users.create_new_user(params) do
+    with {:ok, account} <- Accounts.create_new_account(params) do
       response = %{
-        message: "User created successfully",
-        user: user
+        message: "Account created successfully",
+        account: account
       }
 
       send_json(conn, 200, response)
@@ -31,6 +31,9 @@ defmodule CoolbankWeb.UsersController do
         message = %{type: "Conflict", description: "Email already taken"}
         send_json(conn, 400, message)
     end
+  end
+
+  def withdraw(conn, %{"account_id" => account_id, "amount" => amount}) do
   end
 
   defp send_json(conn, status, response) do

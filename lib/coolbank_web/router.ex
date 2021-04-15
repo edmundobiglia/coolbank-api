@@ -8,7 +8,8 @@ defmodule CoolbankWeb.Router do
   scope "/api", CoolbankWeb do
     pipe_through :api
 
-    post "/users", UsersController, :create
-    delete "/users/:id", UsersController, :delete
+    post "/accounts", AccountsController, :create
+    post "/accounts/withdraw", AccountsController, :withdraw
+    post "/accounts/transfer", AccountsController, :transfer
   end
 end

@@ -1,4 +1,4 @@
-defmodule Coolbank.Users.Schemas.User do
+defmodule Coolbank.Accounts.Schemas.Account do
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -10,7 +10,7 @@ defmodule Coolbank.Users.Schemas.User do
 
   @email_regex ~r/^[A-Za-z0-9\._%+\-+']+@[A-Za-z0-9\.\-]+\.[A-Za-z]{2,4}$/
 
-  schema "users" do
+  schema "accounts" do
     field :name, :string
     field :email, :string
     field :email_confirmation, :string, virtual: true
@@ -19,8 +19,8 @@ defmodule Coolbank.Users.Schemas.User do
     timestamps()
   end
 
-  def create_changeset(user \\ %__MODULE__{}, params) do
-    user
+  def create_changeset(account \\ %__MODULE__{}, params) do
+    account
     |> cast(params, @required ++ @optional)
     |> validate_required(@required)
     |> validate_length(:name, min: 3)
