@@ -35,7 +35,7 @@ defmodule CoolbankWeb.AccountsControllerTest do
       assert %{
                "description" => "Invalid input",
                "details" => %{"email" => "has invalid format"},
-               "type" => "Bad input"
+               "type" => "Bad request"
              } = conn |> post("/api/accounts", input) |> json_response(400)
     end
 
@@ -49,7 +49,7 @@ defmodule CoolbankWeb.AccountsControllerTest do
       assert %{
                "description" => "Invalid input",
                "details" => %{"email_confirmation" => "has invalid format"},
-               "type" => "Bad input"
+               "type" => "Bad request"
              } = conn |> post("/api/accounts", input) |> json_response(400)
     end
 
@@ -65,7 +65,7 @@ defmodule CoolbankWeb.AccountsControllerTest do
                "details" => %{
                  "email_and_email_confirmation" => "Email and email confirmation do not match"
                },
-               "type" => "Bad input"
+               "type" => "Bad request"
              } = conn |> post("/api/accounts", input) |> json_response(400)
     end
 
@@ -79,7 +79,7 @@ defmodule CoolbankWeb.AccountsControllerTest do
       assert %{
                "description" => "Invalid input",
                "details" => %{"name" => "should be at least %{count} character(s)"},
-               "type" => "Bad input"
+               "type" => "Bad request"
              } = conn |> post("/api/accounts", input) |> json_response(400)
     end
 
@@ -91,8 +91,6 @@ defmodule CoolbankWeb.AccountsControllerTest do
       }
 
       account = Repo.insert!(Account.create_changeset(input))
-
-      assert account.name == "John Doe"
 
       assert account.email == "john@email.com"
 
@@ -109,7 +107,7 @@ defmodule CoolbankWeb.AccountsControllerTest do
       assert %{
                "description" => "Invalid input",
                "details" => %{"name" => "can't be blank"},
-               "type" => "Bad input"
+               "type" => "Bad request"
              } = conn |> post("/api/accounts", input) |> json_response(400)
     end
 
@@ -122,7 +120,7 @@ defmodule CoolbankWeb.AccountsControllerTest do
       assert %{
                "description" => "Invalid input",
                "details" => %{"email" => "can't be blank"},
-               "type" => "Bad input"
+               "type" => "Bad request"
              } = conn |> post("/api/accounts", input) |> json_response(400)
     end
 
@@ -135,8 +133,78 @@ defmodule CoolbankWeb.AccountsControllerTest do
       assert %{
                "description" => "Invalid input",
                "details" => %{"email_confirmation" => "can't be blank"},
-               "type" => "Bad input"
+               "type" => "Bad request"
              } = conn |> post("/api/accounts", input) |> json_response(400)
+    end
+  end
+
+  describe "PATCH /api/accounts/withdraw" do
+    test "successfully perform withdraw from account when input is valid", %{conn: conn} do
+      input_for_creation = %{
+        "name" => "John Doe",
+        "email" => "john@email.com",
+        "email_confirmation" => "john@email.com"
+      }
+
+      account = Repo.insert!(Account.create_changeset(input_for_creation))
+
+      assert account.email == "john@email.com"
+
+      input_for_update = %{
+        "account_id" => account.id,
+        "amount" => 500
+      }
+
+      assert %{
+               "message" => "Withdrawal successfull",
+               "account" => %{
+                 "balance" => 99500
+               }
+             } = conn |> patch("/api/accounts/withdraw", input_for_update) |> json_response(200)
+    end
+
+    test "fail when withdrawal makes balance negative", %{conn: conn} do
+      input_for_creation = %{
+        "name" => "John Doe",
+        "email" => "john@email.com",
+        "email_confirmation" => "john@email.com"
+      }
+
+      account = Repo.insert!(Account.create_changeset(input_for_creation))
+
+      assert account.email == "john@email.com"
+
+      assert account.balance == 100_000
+
+      input_for_update = %{
+        "account_id" => account.id,
+        "amount" => 1_000_000
+      }
+
+      assert %{
+               "description" => "Invalid input",
+               "details" => %{"balance" => "must be greater than or equal to %{number}"},
+               "type" => "Bad request"
+             } = conn |> patch("/api/accounts/withdraw", input_for_update) |> json_response(400)
+    end
+
+    test "fail when no account matches the passed ID", %{conn: conn} do
+      input_for_update = %{
+        "account_id" => Ecto.UUID.generate(),
+        "amount" => 500
+      }
+
+      assert %{"type" => "Not found", "description" => "Account not found"} =
+               conn |> patch("/api/accounts/withdraw", input_for_update) |> json_response(404)
+    end
+
+    test "fail when account_id is missing", %{conn: conn} do
+      input_for_update = %{
+        "amount" => 500
+      }
+
+      assert %{"description" => "Invalid input", "type" => "Bad request"} =
+               conn |> patch("/api/accounts/withdraw", input_for_update) |> json_response(400)
     end
   end
 end

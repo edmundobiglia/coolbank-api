@@ -49,4 +49,9 @@ defmodule Coolbank.Accounts do
     Ecto.ConstraintError ->
       {:error, :balance_cannot_be_negative}
   end
+
+  @spec withdraw(any()) :: {:error, :invalid_input}
+  def withdraw(_) do
+    {:error, :invalid_input}
+  end
 end

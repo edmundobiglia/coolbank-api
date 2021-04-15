@@ -19,13 +19,13 @@ defmodule CoolbankWeb.AccountsController do
       send_json(conn, 200, response)
     else
       {:error, %Ecto.Changeset{errors: errors}} ->
-        msg = %{
-          type: "Bad input",
+        message = %{
+          type: "Bad request",
           description: "Invalid input",
           details: translate_changeset_errors(errors)
         }
 
-        send_json(conn, 400, msg)
+        send_json(conn, 400, message)
 
       {:error, :email_conflict} ->
         message = %{type: "Conflict", description: "Email already taken"}
@@ -49,13 +49,13 @@ defmodule CoolbankWeb.AccountsController do
       send_json(conn, 200, response)
     else
       {:error, %Ecto.Changeset{errors: errors}} ->
-        msg = %{
-          type: "Bad input",
+        message = %{
+          type: "Bad request",
           description: "Invalid input",
           details: translate_changeset_errors(errors)
         }
 
-        send_json(conn, 400, msg)
+        send_json(conn, 400, message)
 
       {:error, :account_not_found} ->
         message = %{type: "Not found", description: "Account not found"}
@@ -63,6 +63,10 @@ defmodule CoolbankWeb.AccountsController do
 
       {:error, :balance_cannot_be_negative} ->
         message = %{type: "Conflict", description: "Balance cannot be negative"}
+        send_json(conn, 400, message)
+
+      {:error, :invalid_input} ->
+        message = %{type: "Bad request", description: "Invalid input"}
         send_json(conn, 400, message)
     end
   end
