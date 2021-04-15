@@ -84,17 +84,17 @@ defmodule CoolbankWeb.UsersControllerTest do
     end
 
     test "fail when email already exists in the DB", %{conn: conn} do
-      user = Repo.insert!(User.changeset(%{"name" => "John Doe", "email" => "john@email.com"}))
-
-      assert user.name == "John Doe"
-
-      assert user.email == "john@email.com"
-
       input = %{
         "name" => "John Doe",
         "email" => "john@email.com",
         "email_confirmation" => "john@email.com"
       }
+
+      user = Repo.insert!(User.create_changeset(input))
+
+      assert user.name == "John Doe"
+
+      assert user.email == "john@email.com"
 
       assert %{"description" => "Email already taken", "type" => "Conflict"} =
                conn |> post("/api/users", input) |> json_response(400)
@@ -137,29 +137,6 @@ defmodule CoolbankWeb.UsersControllerTest do
                "details" => %{"email_confirmation" => "can't be blank"},
                "type" => "bad_input"
              } = conn |> post("/api/users", input) |> json_response(400)
-    end
-
-    test "delete user when ID is valid", %{conn: conn} do
-      user = Repo.insert!(User.changeset(%{"name" => "John Doe", "email" => "john@email.com"}))
-
-      assert user.name == "John Doe"
-
-      assert user.email == "john@email.com"
-
-      assert %{"message" => "User deleted successfully"} =
-               conn |> delete("/api/users/#{user.id}") |> json_response(200)
-    end
-
-    test "fail to delete user when ID does not exist", %{conn: conn} do
-      random_id = Ecto.UUID.generate()
-
-      assert %{"message" => "User not found", "type" => "Invalid input"} =
-               conn |> delete("/api/users/#{random_id}") |> json_response(400)
-    end
-
-    test "fail to delete user when ID is not a UUID", %{conn: conn} do
-      assert %{"message" => "Invalid user ID", "type" => "Invalid input"} =
-               conn |> delete("/api/users/asdf1234") |> json_response(400)
     end
   end
 end

@@ -5,15 +5,12 @@ defmodule CoolbankWeb.UsersController do
   use CoolbankWeb, :controller
 
   alias Coolbank.Users
-  alias Coolbank.Users.Inputs
-  alias CoolbankWeb.InputValidation
 
   @doc """
   Create user action
   """
   def create(conn, params) do
-    with {:ok, schema} <- InputValidation.cast_and_apply(params, Inputs.Create),
-         {:ok, user} <- Users.create_new_user(schema) do
+    with {:ok, user} <- Users.create_new_user(params) do
       response = %{
         message: "User created successfully",
         user: user
@@ -32,30 +29,6 @@ defmodule CoolbankWeb.UsersController do
 
       {:error, :email_conflict} ->
         message = %{type: "Conflict", description: "Email already taken"}
-        send_json(conn, 400, message)
-    end
-  end
-
-  @doc """
-  Delete user action
-  """
-  def delete(conn, %{"id" => user_id}) do
-    with {:ok, _} <- Ecto.UUID.cast(user_id),
-         :ok <- Users.delete_user(user_id) do
-      send_json(conn, 200, %{message: "User deleted successfully"})
-    else
-      :error ->
-        send_json(conn, 400, %{type: "Invalid input", message: "Invalid user ID"})
-
-      {:error, :user_not_found} ->
-        send_json(conn, 400, %{type: "Invalid input", message: "User not found"})
-
-      {:error, %Ecto.Changeset{errors: errors}} ->
-        message = %{
-          type: "Invalid input",
-          details: translate_changeset_errors(errors)
-        }
-
         send_json(conn, 400, message)
     end
   end
