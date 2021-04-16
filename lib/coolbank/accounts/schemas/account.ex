@@ -28,6 +28,7 @@ defmodule Coolbank.Accounts.Schemas.Account do
     |> validate_format(:email_confirmation, @email_regex)
     |> validate_number(:balance, greater_than_or_equal_to: 0)
     |> validate_email_equals_to_email_confirmation(params)
+    |> unique_constraint(:email)
   end
 
   def update_balance_changeset(account, params) do

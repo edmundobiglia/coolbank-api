@@ -5,6 +5,7 @@ defmodule CoolbankWeb.AccountsController do
   use CoolbankWeb, :controller
 
   alias Coolbank.Accounts
+  alias Coolbank.Accounts.Schemas.{TransferParams, WithdrawParams}
 
   @doc """
   Action to create account
@@ -26,10 +27,6 @@ defmodule CoolbankWeb.AccountsController do
         }
 
         send_json(conn, 400, message)
-
-      {:error, :email_conflict} ->
-        message = %{type: "Conflict", description: "Email already taken"}
-        send_json(conn, 400, message)
     end
   end
 
@@ -37,7 +34,8 @@ defmodule CoolbankWeb.AccountsController do
   Action to withdraw funds from account
   """
   def withdraw(conn, params) do
-    with {:ok, account} <- Accounts.withdraw(params) do
+    with {:ok, validated_params} <- validate_transaction(params, WithdrawParams),
+         {:ok, account} <- Accounts.withdraw(validated_params) do
       response = %{
         message: "Withdrawal successfull",
         account: %{
@@ -60,14 +58,6 @@ defmodule CoolbankWeb.AccountsController do
       {:error, :account_not_found} ->
         message = %{type: "Not found", description: "Account not found"}
         send_json(conn, 404, message)
-
-      {:error, :balance_cannot_be_negative} ->
-        message = %{type: "Constraint", description: "Balance cannot be negative"}
-        send_json(conn, 400, message)
-
-      {:error, :invalid_input} ->
-        message = %{type: "Bad request", description: "Invalid input"}
-        send_json(conn, 400, message)
     end
   end
 
@@ -75,21 +65,15 @@ defmodule CoolbankWeb.AccountsController do
   Action to transfer money between accounts
   """
   def transfer(conn, params) do
-    with {:ok, updated_accounts} <- Accounts.transfer(params) do
-      %{
-        update_from_account: updated_from_account,
-        update_to_account: updated_to_account
-      } = updated_accounts
+    with {:ok, validated_params} <- validate_transaction(params, TransferParams),
+         {:ok, updated_accounts} <- Accounts.transfer(validated_params) do
+      %{update_from_account: updated_from_account} = updated_accounts
 
       response = %{
         message: "Transfer successfull",
         from_account: %{
           id: updated_from_account.id,
           balance: updated_from_account.balance
-        },
-        to_account: %{
-          to_account: updated_to_account.id,
-          to_account_balance: updated_to_account.balance
         }
       }
 
@@ -107,14 +91,16 @@ defmodule CoolbankWeb.AccountsController do
       {:error, :account_not_found} ->
         message = %{type: "Not found", description: "Account not found"}
         send_json(conn, 404, message)
+    end
+  end
 
-      {:error, :balance_cannot_be_negative} ->
-        message = %{type: "Constraint", description: "Balance cannot be negative"}
-        send_json(conn, 400, message)
+  defp validate_transaction(params, module) do
+    case module.changeset(params) do
+      %Ecto.Changeset{valid?: true} = changeset ->
+        {:ok, Ecto.Changeset.apply_changes(changeset)}
 
-      {:error, :invalid_input} ->
-        message = %{type: "Bad request", description: "Invalid input"}
-        send_json(conn, 400, message)
+      changeset ->
+        {:error, changeset}
     end
   end
 
