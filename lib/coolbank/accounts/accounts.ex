@@ -1,6 +1,7 @@
 defmodule Coolbank.Accounts do
   alias Coolbank.Repo
   alias Coolbank.Accounts.Schemas.Account
+  alias Ecto.Multi
 
   @doc """
   If params are valid, inserts new account into the database and returns
@@ -22,19 +23,23 @@ defmodule Coolbank.Accounts do
   end
 
   @doc """
-  If the passed account_id exists and the resulting balance is not negative,
+  When the input is valid and the resulting balance is not negative,
   returns {:ok, account}, else returns {:error, error} or {:error, changeset}
   """
-  @spec withdraw(map()) ::
+  @spec withdraw(map() | any()) ::
           {:ok, Account.t()}
-          | {:error, :account_not_found | Ecto.Changeset.t() | :balance_cannot_be_negative}
+          | {:error,
+             :account_not_found
+             | Ecto.Changeset.t()
+             | :balance_cannot_be_negative
+             | :invalid_input}
   def withdraw(%{"account_id" => account_id, "amount" => amount}) do
     with %Account{} = account <- Repo.get(Account, account_id) do
       changes = %{balance: account.balance - amount}
 
-      updated_account = Account.update_balance_changeset(account, changes)
+      account_changeset = Account.update_balance_changeset(account, changes)
 
-      case Repo.update(updated_account) do
+      case Repo.update(account_changeset) do
         {:ok, account} -> {:ok, account}
         {:error, changeset} -> {:error, changeset}
       end
@@ -50,8 +55,55 @@ defmodule Coolbank.Accounts do
       {:error, :balance_cannot_be_negative}
   end
 
-  @spec withdraw(any()) :: {:error, :invalid_input}
   def withdraw(_) do
+    {:error, :invalid_input}
+  end
+
+  @doc """
+  When the input is valid and the resulting balance of from_account is not negative,
+  returns {:ok, updated_accounts}, else returns {:error, error} or {:error, changeset}
+  """
+  @spec transfer(map() | any()) ::
+          {:ok, map()}
+          | {:error,
+             :account_not_found
+             | Ecto.Changeset.t()
+             | :balance_cannot_be_negative
+             | :invalid_input}
+  def transfer(%{
+        "from_account_id" => from_account_id,
+        "to_account_id" => to_account_id,
+        "amount" => amount
+      }) do
+    with %Account{} = from_account <- Repo.get(Account, from_account_id),
+         %Account{} = to_account <- Repo.get(Account, to_account_id) do
+      from_account_changeset =
+        Account.update_balance_changeset(from_account, %{balance: from_account.balance - amount})
+
+      to_account_changeset =
+        Account.update_balance_changeset(to_account, %{balance: to_account.balance + amount})
+
+      Multi.new()
+      |> Multi.update(:update_from_account, from_account_changeset)
+      |> Multi.update(:update_to_account, to_account_changeset)
+      |> Repo.transaction()
+      |> case do
+        {:ok, updated_accounts} ->
+          {:ok, updated_accounts}
+
+        {:error, _failed_operation, changeset, _changes} ->
+          {:error, changeset}
+      end
+    else
+      nil ->
+        {:error, :account_not_found}
+    end
+  rescue
+    Ecto.ConstraintError ->
+      {:error, :balance_cannot_be_negative}
+  end
+
+  def transfer(_) do
     {:error, :invalid_input}
   end
 end

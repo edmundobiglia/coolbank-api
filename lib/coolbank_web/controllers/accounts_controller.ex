@@ -34,7 +34,7 @@ defmodule CoolbankWeb.AccountsController do
   end
 
   @doc """
-  Action to withdraw money from an account
+  Action to withdraw money from account
   """
   def withdraw(conn, params) do
     with {:ok, account} <- Accounts.withdraw(params) do
@@ -74,9 +74,49 @@ defmodule CoolbankWeb.AccountsController do
   @doc """
   Action to transfer money between accounts
   """
+  def transfer(conn, params) do
+    with {:ok, updated_accounts} <- Accounts.transfer(params) do
+      %{
+        update_from_account: updated_from_account,
+        update_to_account: updated_to_account
+      } = updated_accounts
 
-  # def transfer(conn, params) do
-  # end
+      response = %{
+        message: "Transfder successfull",
+        from_account: %{
+          id: updated_from_account.id,
+          balance: updated_from_account.balance
+        },
+        to_account: %{
+          to_account: updated_to_account.id,
+          to_account_balance: updated_to_account.balance
+        }
+      }
+
+      send_json(conn, 400, response)
+    else
+      {:error, %Ecto.Changeset{errors: errors}} ->
+        message = %{
+          type: "Bad request",
+          description: "Invalid input",
+          details: translate_changeset_errors(errors)
+        }
+
+        send_json(conn, 400, message)
+
+      {:error, :account_not_found} ->
+        message = %{type: "Not found", description: "Account not found"}
+        send_json(conn, 404, message)
+
+      {:error, :balance_cannot_be_negative} ->
+        message = %{type: "Conflict", description: "Balance cannot be negative"}
+        send_json(conn, 400, message)
+
+      {:error, :invalid_input} ->
+        message = %{type: "Bad request", description: "Invalid input"}
+        send_json(conn, 400, message)
+    end
+  end
 
   defp send_json(conn, status, response) do
     conn
