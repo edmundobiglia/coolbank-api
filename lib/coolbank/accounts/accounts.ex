@@ -4,6 +4,8 @@ defmodule Coolbank.Accounts do
   alias Ecto.Multi
 
   @doc """
+  Creates new account.
+
   If params are valid, inserts new account into the database and returns
   {:ok, account}, else returns {:error, error} or {:error, changeset}
   """
@@ -23,6 +25,8 @@ defmodule Coolbank.Accounts do
   end
 
   @doc """
+  Performs withdraw from an account.
+
   When the input is valid and the resulting balance is not negative,
   returns {:ok, account}, else returns {:error, error} or {:error, changeset}
   """
@@ -60,14 +64,16 @@ defmodule Coolbank.Accounts do
   end
 
   @doc """
+  Transfer funds between accounts.
+
   When the input is valid and the resulting balance of from_account is not negative,
   returns {:ok, updated_accounts}, else returns {:error, error} or {:error, changeset}
   """
   @spec transfer(map() | any()) ::
           {:ok, map()}
           | {:error,
-             :account_not_found
-             | Ecto.Changeset.t()
+             Ecto.Changeset.t()
+             | :account_not_found
              | :balance_cannot_be_negative
              | :invalid_input}
   def transfer(%{

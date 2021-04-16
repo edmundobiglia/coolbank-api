@@ -34,7 +34,7 @@ defmodule CoolbankWeb.AccountsController do
   end
 
   @doc """
-  Action to withdraw money from account
+  Action to withdraw funds from account
   """
   def withdraw(conn, params) do
     with {:ok, account} <- Accounts.withdraw(params) do
@@ -62,7 +62,7 @@ defmodule CoolbankWeb.AccountsController do
         send_json(conn, 404, message)
 
       {:error, :balance_cannot_be_negative} ->
-        message = %{type: "Conflict", description: "Balance cannot be negative"}
+        message = %{type: "Constraint", description: "Balance cannot be negative"}
         send_json(conn, 400, message)
 
       {:error, :invalid_input} ->
@@ -82,7 +82,7 @@ defmodule CoolbankWeb.AccountsController do
       } = updated_accounts
 
       response = %{
-        message: "Transfder successfull",
+        message: "Transfer successfull",
         from_account: %{
           id: updated_from_account.id,
           balance: updated_from_account.balance
@@ -93,7 +93,7 @@ defmodule CoolbankWeb.AccountsController do
         }
       }
 
-      send_json(conn, 400, response)
+      send_json(conn, 200, response)
     else
       {:error, %Ecto.Changeset{errors: errors}} ->
         message = %{
@@ -109,7 +109,7 @@ defmodule CoolbankWeb.AccountsController do
         send_json(conn, 404, message)
 
       {:error, :balance_cannot_be_negative} ->
-        message = %{type: "Conflict", description: "Balance cannot be negative"}
+        message = %{type: "Constraint", description: "Balance cannot be negative"}
         send_json(conn, 400, message)
 
       {:error, :invalid_input} ->
